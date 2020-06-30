@@ -1,3 +1,8 @@
+/*
+* Need to continue to hide dealer card until its turn.
+* Need auto win for player/dealer natural 21.
+*/
+
 #include "Cards.h"
 #include <cstddef>
 #include <iostream>
@@ -7,6 +12,61 @@
 #include <ctime>
 #include <io.h>
 #include <fcntl.h>
+#include <limits>
+
+void printCard(const cCards_t& thisCard);
+deck_array createDeck();
+void printDeck(const deck_array& aDeck);
+void printHands(hands_t& hands);
+void shuffleDeck(deck_array& aDeck);
+card_value_t getNonAceValue(const cCards_t& card);
+card_value_t getAceValue(const card_value_t& sum, bool& ace);
+void getCardValue(hands_t& hands, std::size_t index, const who_t who);
+void initDeal(deck_array& deck, card_count_t& dealt, hands_t& hands);
+void playerLogic(hands_t& hands, deck_array& deck, card_count_t& dealt);
+void dealerLogic(hands_t& hands, deck_array& deck, card_count_t& dealt);
+void getCard(hands_t& hands, deck_array& deck, card_count_t& dealt, const who_t who);
+bool checkBust(hands_t& hands, const who_t who);
+bool checkGameOver(hands_t& hands);
+bool checkPlayAgain();
+
+void playBJ()
+{
+	auto gameDeck{ createDeck() };
+	hands_t hands{};
+	card_count_t cDealt{ 1 };
+	bool bQuit{ false };
+
+	while (!bQuit)
+	{
+		shuffleDeck(gameDeck);
+		initDeal(gameDeck, cDealt, hands);
+
+		bool bGameOver{ false };
+		
+		printHands(hands);									//Print initial hands; Second dealer card hidden.
+
+		playerLogic(hands, gameDeck, cDealt);				//Player goes first. Continues until bust or player stands.
+		bGameOver = checkGameOver(hands);					//Check if player is bust before continuing to dealer.
+
+		if (!bGameOver)
+		{
+			dealerLogic(hands, gameDeck, cDealt);			//Dealer goes until 17 or great, or bust.
+			checkGameOver(hands);							//Dump returned bool value and display game results.
+		}
+
+		bQuit = checkPlayAgain();
+	}
+}
+
+int main()
+{
+	_setmode(_fileno(stdout), _O_U16TEXT);
+
+	playBJ();
+
+	return 0;
+}
 
 void printCard(const cCards_t& thisCard)
 {
@@ -36,7 +96,7 @@ void printCard(const cCards_t& thisCard)
 		case cRank_t::EIGHT:
 			std::wcout << '8';
 			break;
-		case cRank_t::NINE: 
+		case cRank_t::NINE:
 			std::wcout << '9';
 			break;
 		case cRank_t::TEN:
@@ -87,7 +147,7 @@ deck_array createDeck()
 	int nSuit{ 0 };
 
 	for (auto& card : aDeck)
-	{		
+	{
 		card.rank = static_cast<cRank_t>(nRank);
 		++nRank;
 
@@ -186,7 +246,7 @@ card_value_t getNonAceValue(const cCards_t& card)
 /*****************************************************************************
 * getAceValue checks the sum of cards in hand to determine if an Ace is worth
 * 1 or 11. Sums <= 21 with an 11 valued Ace will modify ace to equal true.
-* Returns 1 or 11 to caller. Hands that already have an ace in them will 
+* Returns 1 or 11 to caller. Hands that already have an ace in them will
 * default to a value of 1, as two 11-valued aces cannot exist in one hand.
 ******************************************************************************/
 card_value_t getAceValue(const card_value_t& sum, bool& ace)
@@ -204,12 +264,12 @@ card_value_t getAceValue(const card_value_t& sum, bool& ace)
 * getCardValue calls getNonAceValue or getAceValue depending on card passed.
 * Modifies the values to hands members.
 *****************************************************************************/
-void getCardValue(hands_t& hands, std::size_t index, who_t who)
+void getCardValue(hands_t& hands, std::size_t index, const who_t who)
 {
 	switch (who)
 	{
 		case who_t::WHO_DEALER:
-			if (index == 1)
+			if (index == static_cast<std::size_t>(1))
 			{
 				if (hands.dHand[index].rank == cRank_t::ACE)
 				{
@@ -247,13 +307,13 @@ void getCardValue(hands_t& hands, std::size_t index, who_t who)
 /**********************************************************************************
 * initDeal deals 2 cards each to player and dealer. The number of cards dealt
 * are tracked with the dealt parameter, which is incremented with each card dealt.
-* The dealer's face down card is handleds in get*AceValue() functions and 
+* The dealer's face down card is handleds in get*AceValue() functions and
 * printHands() function.
 ***********************************************************************************/
-void initDeal(deck_array& deck, std::size_t& dealt, Cards::Hands& hands)
+void initDeal(deck_array& deck, card_count_t& dealt, hands_t& hands)
 {
 	//Four total cards need to be dealt and removed from the deck.
-	for(std::size_t iii{0}; iii < 2; ++iii)
+	for (std::size_t iii{ 0 }; iii < 2; ++iii)
 	{
 		hands.pHand[iii] = deck[(deck.size() - dealt)];
 
@@ -269,25 +329,182 @@ void initDeal(deck_array& deck, std::size_t& dealt, Cards::Hands& hands)
 	}
 }
 
-void playBJ()
+void playerLogic(hands_t& hands, deck_array& deck, card_count_t& dealt)
 {
-	auto gameDeck{ createDeck() };
-	hands_t hands{};
-	std::size_t cDealt{ 1 };
+	bool bGetInput{ true };
 
-	shuffleDeck(gameDeck);
-	initDeal(gameDeck, cDealt, hands);
+	while (bGetInput)
+	{
+		std::wcout << "(H)it or (S)tand?\n";
 
-	printHands(hands);
-	printHands(hands);
+		wchar_t pResponse{};
+		std::wcin >> pResponse;
 
+		if (pResponse != L'h' && pResponse != L'H' &&
+			pResponse != L's' && pResponse != L'S' ||
+			std::wcin.fail())
+		{
+			std::wcout << "\nThat was not valid input! Please, try again...\n";
+			std::wcin.clear();
+			std::wcin.ignore(stream_size::max(), '\n');
+		}
+
+		if (pResponse == L'h' || pResponse == L'H')
+		{
+			getCard(hands, deck, dealt, who_t::WHO_PLAYER);
+			printHands(hands);
+			bGetInput = !(checkBust(hands, who_t::WHO_PLAYER));
+		}
+		else if (pResponse == L's' || pResponse == L'S')
+		{
+			checkBust(hands, who_t::WHO_PLAYER);
+			printHands(hands);
+			bGetInput = false;
+		}
+
+		if (!bGetInput)
+			hands.pTurnOver = true;
+	}
 }
 
-int main()
+void dealerLogic(hands_t& hands, deck_array& deck, card_count_t& dealt)
 {
-	_setmode(_fileno(stdout), _O_U16TEXT);
+	bool bGetInput = true;
 
-	playBJ();
+	while (bGetInput)
+	{
+		if (hands.dSum >= Cards::DEALER_HIT)
+		{
+			bGetInput = false;
+			printHands(hands);
+			checkBust(hands, who_t::WHO_DEALER);
+		}
+		else if (hands.dSum < Cards::DEALER_HIT)
+		{
+			getCard(hands, deck, dealt, who_t::WHO_DEALER);
+			printHands(hands);
+			bGetInput = !(checkBust(hands, who_t::WHO_DEALER));
+		}
 
-	return 0;
+		if (!bGetInput)
+			hands.dTurnOver = true;
+	}
+}
+
+bool isPMax(cCards_t& card)
+{
+	return (card.rank == cRank_t::RANK_MAX);
+}
+
+bool isDMax(cCards_t& card)
+{
+	return (card.rank == cRank_t::RANK_MAX);
+}
+
+void getCard(hands_t& hands, deck_array& deck, card_count_t& dealt, const who_t who)
+{
+	if (who == who_t::WHO_PLAYER)
+	{
+		//pHand index = pHand.size() - (number of elements set to RANK_MAX).
+		std::size_t index{ (hands.pHand.size() - std::count_if(hands.pHand.begin(),
+												hands.pHand.end(), isPMax))};
+
+		hands.pHand[index] = deck[(deck.size() - dealt)];
+		getCardValue(hands, index, who_t::WHO_PLAYER);
+
+		++dealt;
+	}
+	else if (who == who_t::WHO_DEALER)
+	{
+		std::size_t index{ (hands.dHand.size() - std::count_if(hands.dHand.begin(),
+												hands.dHand.end(), isDMax)) };
+
+		hands.dHand[index] = deck[(deck.size() - dealt)];
+		getCardValue(hands, index, who_t::WHO_DEALER);
+
+		++dealt;
+	}
+}
+
+bool checkBust(hands_t& hands, const who_t who)
+{
+	if (who == who_t::WHO_PLAYER)
+	{
+		if (hands.pSum > 21)
+		{
+			hands.pBust = true;
+			return true;
+		}
+		else
+			return false;
+	}
+	else if (who == who_t::WHO_DEALER)
+	{
+		if (hands.dSum > 21)
+		{
+			hands.dBust = true;
+			return true;
+		}
+		else
+			return false;
+	}
+	else
+		return false;
+}
+
+bool checkGameOver(hands_t& hands)
+{
+	if (hands.pBust == true)
+	{
+		std::wcout << "\nBust! You lose!\n";
+		return true;
+	}
+	else if (hands.dBust == true)
+	{
+		std::wcout << "\nDealer bust! You win!\n";
+		return true;
+	}
+	else if (hands.pSum > hands.dSum && hands.pTurnOver &&
+		hands.dTurnOver)
+	{
+		std::wcout << "\nYou win!\n";
+		return true;
+	}
+	else if (hands.pSum < hands.dSum && hands.pTurnOver &&
+		hands.dTurnOver)
+	{
+		std::wcout << "\nDealer wins!\n";
+		return true;
+	}
+	else
+		return false;
+}
+
+bool checkPlayAgain()
+{
+	bool bGetInput{ true };
+
+	while (bGetInput)
+	{
+		std::wcout << "Play again (Y/N)?\n";
+
+		wchar_t pResponse{};
+		std::wcin >> pResponse;
+
+		if (pResponse != L'y' && pResponse != L'Y' ||
+			pResponse != L'n' && pResponse != L'N' ||
+			std::wcin.fail())
+		{
+			std::wcout << "\nThat was not valid input! Please, try again...\n";
+			std::wcin.clear();
+			std::wcin.ignore(stream_size::max(), '\n');
+		}
+
+		if (pResponse != L'y' || pResponse == L'Y')
+			return true;
+		else if (pResponse == L'n' || pResponse == L'N')
+			return false;
+	}
+
+	return false;
 }

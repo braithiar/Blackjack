@@ -2,6 +2,7 @@
 #define CARDS_06282020_H
 
 #include <array>
+#include <limits>
 
 namespace Cards
 {
@@ -49,12 +50,18 @@ namespace Cards
 		std::array<Card, 10> pHand{};
 		bool pAce{ false };
 		int pSum{ 0 };
+		bool pBust{ false };
+		bool pTurnOver{ false };
 		std::array<Card, 10> dHand{};
 		bool dAce{ false };
 		bool bDealerHidden{ true };
 		int dSum{ 0 };
 		int dHiddenSum{ 0 };
+		bool dBust{ false };
+		bool dTurnOver{ false };
 	};
+
+	inline constexpr int DEALER_HIT = 17;
 }
 
 using cRank_t = Cards::Ranks;
@@ -64,5 +71,7 @@ using deck_array = std::array<cCards_t, 52>;
 using card_value_t = int;
 using hands_t = Cards::Hands;
 using who_t = Cards::Who;
+using card_count_t = std::size_t;
+using stream_size = std::numeric_limits<std::streamsize>;
 
 #endif
