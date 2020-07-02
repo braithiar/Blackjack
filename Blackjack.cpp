@@ -32,6 +32,20 @@ bool checkPlayAgain();
 
 void playBJ()
 {
+	std::wcout << 
+		"==========================================================================\n" <<
+		"++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n" <<
+		"||                                                                      ||\n" << 
+		"|| Welcome to Blackjack, the shittiest of games! Whoever is closest to  ||\n" <<
+		"|| 21, without going over, wins. You will automatically win if you're   ||\n" <<
+		"|| dealt a natural 21 (blackjack). However, this applies to the dealer, ||\n" <<
+		"|| as well!                                                             ||\n" <<
+		"||                                                                      ||\n" <<
+		"||                              GOOD LUCK!                              ||\n" << 
+		"||                                                                      ||\n" <<
+		"++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n" <<
+		"==========================================================================\n\n";
+
 	bool bQuit{ false };
 
 	while (!bQuit)
@@ -42,18 +56,22 @@ void playBJ()
 
 		shuffleDeck(gameDeck);
 		initDeal(gameDeck, cDealt, hands);
+		
+		printHands(hands);												//Print initial hands; Second dealer card hidden.
 
 		bool bGameOver{ false };
-		
-		printHands(hands);									//Print initial hands; Second dealer card hidden.
-
-		playerLogic(hands, gameDeck, cDealt);				//Player goes first. Continues until bust or player stands.
-		bGameOver = checkGameOver(hands);					//Check if player is bust before continuing to dealer.
+		bGameOver = checkGameOver(hands);								//Check for blackjack (natural 21).
 
 		if (!bGameOver)
 		{
-			dealerLogic(hands, gameDeck, cDealt);			//Dealer goes until 17 or great, or bust.
-			checkGameOver(hands);							//Dump returned bool value and display game results.
+			playerLogic(hands, gameDeck, cDealt);						//Player goes first. Continues until bust or player stands.
+			bGameOver = checkGameOver(hands);							//Check if player is bust before continuing to dealer.
+		}
+
+		if (!bGameOver)
+		{
+			dealerLogic(hands, gameDeck, cDealt);						//Dealer goes until 17 or great, or bust.
+			checkGameOver(hands);										//Dump returned bool value and display game results.
 		}
 
 		bQuit = !(checkPlayAgain());
@@ -200,7 +218,7 @@ void printHands(hands_t& hands)
 	std::wcout << "Dealer has:\n";
 	std::wcout << "-----------\n";
 
-	if (hands.bDealerHidden)
+	if (hands.bDealerHidden && hands.dSum != 21)
 	{
 		printCard(hands.dHand[0]);
 
@@ -414,6 +432,9 @@ void dealerLogic(hands_t& hands, deck_array& deck, card_count_t& dealt)
 	}
 }
 
+/*******************************************************************
+* isPMax & isDMax used with std::count_if inside getCard function.
+********************************************************************/
 bool isPMax(cCards_t& card)
 {
 	return (card.rank == cRank_t::RANK_MAX);
@@ -423,6 +444,7 @@ bool isDMax(cCards_t& card)
 {
 	return (card.rank == cRank_t::RANK_MAX);
 }
+/*******************************************************************/
 
 void getCard(hands_t& hands, deck_array& deck, card_count_t& dealt, const who_t who)
 {
@@ -477,6 +499,34 @@ bool checkBust(hands_t& hands, const who_t who)
 
 bool checkGameOver(hands_t& hands)
 {
+	/***************Check for natural 21 **************/
+	static bool bCheckedOnce{ false };
+
+	if (!bCheckedOnce)
+	{
+		if (hands.pSum == 21 && hands.dSum != 21)
+		{
+			std::wcout << "\nBlackjack! You win!\n";
+			return true;
+		}
+		else if (hands.pSum != 21 && hands.dSum == 21)
+		{
+			std::wcout << "\nDealer blackjack... You lose!\n";
+			return true;
+		}
+		else if (hands.pSum == 21 && hands.dSum == 21)
+		{
+			std::wcout << "\nOh my! You both have natural 21s! It's a draw...\n";
+			return true;
+		}
+		else
+		{
+			bCheckedOnce = true;
+			return false;
+		}
+	}
+	/**************************************************/
+
 	if (hands.pBust == true)
 	{
 		std::wcout << "\nBust! You lose!\n\n";
@@ -497,6 +547,12 @@ bool checkGameOver(hands_t& hands)
 		hands.dTurnOver)
 	{
 		std::wcout << "\nDealer wins!\n\n";
+		return true;
+	}
+	else if (hands.pSum == hands.dSum && hands.pTurnOver &&
+		hands.dTurnOver)
+	{
+		std::wcout << "\nIt's a draw!\n\n";
 		return true;
 	}
 	else
