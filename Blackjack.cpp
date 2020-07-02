@@ -32,13 +32,14 @@ bool checkPlayAgain();
 
 void playBJ()
 {
-	auto gameDeck{ createDeck() };
-	hands_t hands{};
-	card_count_t cDealt{ 1 };
 	bool bQuit{ false };
 
 	while (!bQuit)
 	{
+		auto gameDeck{ createDeck() };
+		hands_t hands{};
+		card_count_t cDealt{ 1 };
+
 		shuffleDeck(gameDeck);
 		initDeal(gameDeck, cDealt, hands);
 
@@ -55,7 +56,7 @@ void playBJ()
 			checkGameOver(hands);							//Dump returned bool value and display game results.
 		}
 
-		bQuit = checkPlayAgain();
+		bQuit = !(checkPlayAgain());
 	}
 }
 
@@ -175,7 +176,8 @@ void printDeck(const deck_array& aDeck)
 //printHands modifies variables controlling dealer's inital hidden card.
 void printHands(hands_t& hands)
 {
-	std::wcout << "Player has:\n";
+	std::wcout << "\n================================\n";
+	std::wcout << "\n\nPlayer has:\n";
 	std::wcout << "-----------\n";
 
 	for (auto& card : hands.pHand)
@@ -212,6 +214,8 @@ void printHands(hands_t& hands)
 
 		std::wcout << '\n' << "Value: " << hands.dSum << "\n\n";
 	}
+
+	std::wcout << "\n================================\n";
 }
 
 void shuffleDeck(deck_array& aDeck)
@@ -335,10 +339,11 @@ void playerLogic(hands_t& hands, deck_array& deck, card_count_t& dealt)
 
 	while (bGetInput)
 	{
-		std::wcout << "(H)it or (S)tand?\n";
+		std::wcout << "(H)it or (S)tand? ";
 
 		wchar_t pResponse{};
 		std::wcin >> pResponse;
+		std::wcin.ignore(stream_size::max(), '\n');
 
 		if (pResponse != L'h' && pResponse != L'H' &&
 			pResponse != L's' && pResponse != L'S' ||
@@ -373,14 +378,23 @@ void dealerLogic(hands_t& hands, deck_array& deck, card_count_t& dealt)
 
 	while (bGetInput)
 	{
+		std::wcout << "Dealer's turn. Press enter to continue...";
+
+		wchar_t sGarbage[1];
+		std::wcin.getline(sGarbage, 1);
+
 		if (hands.dSum >= Cards::DEALER_HIT)
 		{
+			std::wcout << "\nDealer stands.\n";
+
 			bGetInput = false;
 			printHands(hands);
 			checkBust(hands, who_t::WHO_DEALER);
 		}
 		else if (hands.dSum < Cards::DEALER_HIT)
 		{
+			std::wcout << "\nDealer hits.\n";
+
 			getCard(hands, deck, dealt, who_t::WHO_DEALER);
 			printHands(hands);
 			bGetInput = !(checkBust(hands, who_t::WHO_DEALER));
@@ -456,24 +470,24 @@ bool checkGameOver(hands_t& hands)
 {
 	if (hands.pBust == true)
 	{
-		std::wcout << "\nBust! You lose!\n";
+		std::wcout << "\nBust! You lose!\n\n";
 		return true;
 	}
 	else if (hands.dBust == true)
 	{
-		std::wcout << "\nDealer bust! You win!\n";
+		std::wcout << "\nDealer bust! You win!\n\n";
 		return true;
 	}
 	else if (hands.pSum > hands.dSum && hands.pTurnOver &&
 		hands.dTurnOver)
 	{
-		std::wcout << "\nYou win!\n";
+		std::wcout << "\nYou win!\n\n";
 		return true;
 	}
 	else if (hands.pSum < hands.dSum && hands.pTurnOver &&
 		hands.dTurnOver)
 	{
-		std::wcout << "\nDealer wins!\n";
+		std::wcout << "\nDealer wins!\n\n";
 		return true;
 	}
 	else
@@ -486,12 +500,12 @@ bool checkPlayAgain()
 
 	while (bGetInput)
 	{
-		std::wcout << "Play again (Y/N)?\n";
+		std::wcout << "Play again (Y/N)? ";
 
 		wchar_t pResponse{};
 		std::wcin >> pResponse;
 
-		if (pResponse != L'y' && pResponse != L'Y' ||
+		if (pResponse != L'y' && pResponse != L'Y' &&
 			pResponse != L'n' && pResponse != L'N' ||
 			std::wcin.fail())
 		{
@@ -500,7 +514,7 @@ bool checkPlayAgain()
 			std::wcin.ignore(stream_size::max(), '\n');
 		}
 
-		if (pResponse != L'y' || pResponse == L'Y')
+		if (pResponse == L'y' || pResponse == L'Y')
 			return true;
 		else if (pResponse == L'n' || pResponse == L'N')
 			return false;
