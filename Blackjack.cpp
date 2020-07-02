@@ -176,6 +176,12 @@ void printDeck(const deck_array& aDeck)
 //printHands modifies variables controlling dealer's inital hidden card.
 void printHands(hands_t& hands)
 {
+	if (hands.pTurnOver)
+	{
+		std::wcout << "\nDealer reveals his hidden card...\n";
+		hands.bDealerHidden = false;
+	}
+
 	std::wcout << "\n================================\n";
 	std::wcout << "\n\nPlayer has:\n";
 	std::wcout << "-----------\n";
@@ -197,7 +203,6 @@ void printHands(hands_t& hands)
 	if (hands.bDealerHidden)
 	{
 		printCard(hands.dHand[0]);
-		hands.bDealerHidden = false;
 
 		std::wcout << '\n' << "Value: " << (hands.dSum - hands.dHiddenSum) << "\n\n";
 	}
@@ -363,8 +368,12 @@ void playerLogic(hands_t& hands, deck_array& deck, card_count_t& dealt)
 		else if (pResponse == L's' || pResponse == L'S')
 		{
 			checkBust(hands, who_t::WHO_PLAYER);
+			hands.pTurnOver = true;
 			printHands(hands);
 			bGetInput = false;
+
+			//Skip last if statement, as pTurnOver is already true.
+			continue;					
 		}
 
 		if (!bGetInput)
