@@ -12,6 +12,14 @@ namespace Cards
 		WHO_DEALER
 	};
 
+	enum WLD
+	{
+		WLD_WIN,
+		WLD_LOSE,
+		WLD_DRAW,
+		WLD_MAX
+	};
+
 	enum class Suits
 	{
 		CLUBS,
@@ -73,5 +81,7 @@ using hands_t = Cards::Hands;
 using who_t = Cards::Who;
 using card_count_t = std::size_t;
 using stream_size = std::numeric_limits<std::streamsize>;
+using score_t = Cards::WLD;
+using score_array = std::array<int, Cards::WLD::WLD_MAX>;
 
 #endif

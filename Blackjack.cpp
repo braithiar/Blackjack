@@ -27,7 +27,7 @@ void playerLogic(hands_t& hands, deck_array& deck, card_count_t& dealt);
 void dealerLogic(hands_t& hands, deck_array& deck, card_count_t& dealt);
 void getCard(hands_t& hands, deck_array& deck, card_count_t& dealt, const who_t who);
 bool checkBust(hands_t& hands, const who_t who);
-bool checkGameOver(hands_t& hands);
+bool checkGameOver(hands_t& hands, score_array& score);
 bool checkPlayAgain();
 
 void playBJ()
@@ -45,7 +45,7 @@ void playBJ()
 		"||                                                                      ||\n" <<
 		"++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n" <<
 		"==========================================================================\n\n";
-
+	score_array aPScore{};
 	bool bQuit{ false };
 
 	while (!bQuit)
@@ -57,22 +57,26 @@ void playBJ()
 		shuffleDeck(gameDeck);
 		initDeal(gameDeck, cDealt, hands);
 		
-		printHands(hands);												//Print initial hands; Second dealer card hidden.
+		printHands(hands);														//Print initial hands; Second dealer card hidden.
 
 		bool bGameOver{ false };
-		bGameOver = checkGameOver(hands);								//Check for blackjack (natural 21).
+		bGameOver = checkGameOver(hands, aPScore);								//Check for blackjack (natural 21).
 
 		if (!bGameOver)
 		{
-			playerLogic(hands, gameDeck, cDealt);						//Player goes first. Continues until bust or player stands.
-			bGameOver = checkGameOver(hands);							//Check if player is bust before continuing to dealer.
+			playerLogic(hands, gameDeck, cDealt);								//Player goes first. Continues until bust or player stands.
+			bGameOver = checkGameOver(hands, aPScore);							//Check if player is bust before continuing to dealer.
 		}
 
 		if (!bGameOver)
 		{
-			dealerLogic(hands, gameDeck, cDealt);						//Dealer goes until 17 or great, or bust.
-			checkGameOver(hands);										//Dump returned bool value and display game results.
+			dealerLogic(hands, gameDeck, cDealt);								//Dealer goes until 17 or great, or bust.
+			checkGameOver(hands, aPScore);										//Dump returned bool value and display game results.
 		}
+
+		std::wcout << "\n\tGames Won: [" << aPScore[score_t::WLD_WIN] << "]\t" <<
+			"Games Lost: [" << aPScore[score_t::WLD_LOSE] << "]\t" <<
+			"Draws: [" << aPScore[score_t::WLD_DRAW] << "]\n\n";
 
 		bQuit = !(checkPlayAgain());
 	}
@@ -196,13 +200,13 @@ void printHands(hands_t& hands)
 {
 	if (hands.pTurnOver)
 	{
-		std::wcout << "\nDealer reveals his hidden card...\n";
+		std::wcout << "\n\tDealer reveals his hidden card...\n";
 		hands.bDealerHidden = false;
 	}
 
 	std::wcout << "\n================================\n";
-	std::wcout << "\n\nPlayer has:\n";
-	std::wcout << "-----------\n";
+	std::wcout << "\n\n\tPlayer has:\n";
+	std::wcout << "\t-----------\n\t";
 
 	for (auto& card : hands.pHand)
 	{
@@ -213,16 +217,16 @@ void printHands(hands_t& hands)
 		}
 	}
 
-	std::wcout << '\n' << "Value: " << hands.pSum << "\n\n";
+	std::wcout << "\n\tValue: " << hands.pSum << "\n\n";
 
-	std::wcout << "Dealer has:\n";
-	std::wcout << "-----------\n";
+	std::wcout << "\tDealer has:\n";
+	std::wcout << "\t-----------\n\t";
 
 	if (hands.bDealerHidden && hands.dSum != 21)
 	{
 		printCard(hands.dHand[0]);
 
-		std::wcout << '\n' << "Value: " << (hands.dSum - hands.dHiddenSum) << "\n\n";
+		std::wcout << "\n\tValue: " << (hands.dSum - hands.dHiddenSum) << "\n\n";
 	}
 	else
 	{
@@ -235,7 +239,7 @@ void printHands(hands_t& hands)
 			}
 		}
 
-		std::wcout << '\n' << "Value: " << hands.dSum << "\n\n";
+		std::wcout << "\n\tValue: " << hands.dSum << "\n\n";
 	}
 
 	std::wcout << "\n================================\n";
@@ -362,17 +366,16 @@ void playerLogic(hands_t& hands, deck_array& deck, card_count_t& dealt)
 
 	while (bGetInput)
 	{
-		std::wcout << "(H)it or (S)tand? ";
+		std::wcout << "\t(H)it or (S)tand? ";
 
 		wchar_t pResponse{};
 		std::wcin >> pResponse;
-		std::wcin.ignore(stream_size::max(), '\n');
 
 		if (pResponse != L'h' && pResponse != L'H' &&
 			pResponse != L's' && pResponse != L'S' ||
 			std::wcin.fail())
 		{
-			std::wcout << "\nThat was not valid input! Please, try again...\n";
+			std::wcout << "\n\tThat was not valid input! Please, try again...\n";
 			std::wcin.clear();
 			std::wcin.ignore(stream_size::max(), '\n');
 		}
@@ -405,14 +408,14 @@ void dealerLogic(hands_t& hands, deck_array& deck, card_count_t& dealt)
 
 	while (bGetInput)
 	{
-		std::wcout << "Dealer's turn. Press enter to continue...";
+		std::wcout << "\tDealer's turn. Press enter to continue...";
 
 		wchar_t sGarbage[1];
 		std::wcin.getline(sGarbage, 1);
 
 		if (hands.dSum >= Cards::DEALER_HIT)
 		{
-			std::wcout << "\nDealer stands.\n";
+			std::wcout << "\n\tDealer stands.\n";
 
 			bGetInput = false;
 			printHands(hands);
@@ -420,7 +423,7 @@ void dealerLogic(hands_t& hands, deck_array& deck, card_count_t& dealt)
 		}
 		else if (hands.dSum < Cards::DEALER_HIT)
 		{
-			std::wcout << "\nDealer hits.\n";
+			std::wcout << "\n\tDealer hits.\n";
 
 			getCard(hands, deck, dealt, who_t::WHO_DEALER);
 			printHands(hands);
@@ -497,7 +500,7 @@ bool checkBust(hands_t& hands, const who_t who)
 		return false;
 }
 
-bool checkGameOver(hands_t& hands)
+bool checkGameOver(hands_t& hands, score_array& score)
 {
 	/***************Check for natural 21 **************/
 	static bool bCheckedOnce{ false };
@@ -506,17 +509,26 @@ bool checkGameOver(hands_t& hands)
 	{
 		if (hands.pSum == 21 && hands.dSum != 21)
 		{
-			std::wcout << "\nBlackjack! You win!\n";
+			std::wcout << "\n\tBlackjack! You win!\n";
+
+			++score[score_t::WLD_WIN];
+
 			return true;
 		}
 		else if (hands.pSum != 21 && hands.dSum == 21)
 		{
-			std::wcout << "\nDealer blackjack... You lose!\n";
+			std::wcout << "\n\tDealer blackjack... You lose!\n";
+
+			++score[score_t::WLD_LOSE];
+
 			return true;
 		}
 		else if (hands.pSum == 21 && hands.dSum == 21)
 		{
-			std::wcout << "\nOh my! You both have natural 21s! It's a draw...\n";
+			std::wcout << "\n\tOh my! You both have natural 21s! It's a draw...\n";
+
+			++score[score_t::WLD_DRAW];
+
 			return true;
 		}
 		else
@@ -529,30 +541,45 @@ bool checkGameOver(hands_t& hands)
 
 	if (hands.pBust == true)
 	{
-		std::wcout << "\nBust! You lose!\n\n";
+		std::wcout << "\n\tBust! You lose!\n\n";
+
+		++score[score_t::WLD_LOSE];
+
 		return true;
 	}
 	else if (hands.dBust == true)
 	{
-		std::wcout << "\nDealer bust! You win!\n\n";
+		std::wcout << "\n\tDealer bust! You win!\n\n";
+
+		++score[score_t::WLD_WIN];
+
 		return true;
 	}
 	else if (hands.pSum > hands.dSum && hands.pTurnOver &&
 		hands.dTurnOver)
 	{
-		std::wcout << "\nYou win!\n\n";
+		std::wcout << "\n\tYou win!\n\n";
+
+		++score[score_t::WLD_WIN];
+
 		return true;
 	}
 	else if (hands.pSum < hands.dSum && hands.pTurnOver &&
 		hands.dTurnOver)
 	{
-		std::wcout << "\nDealer wins!\n\n";
+		std::wcout << "\n\tDealer wins!\n\n";
+
+		++score[score_t::WLD_LOSE];
+
 		return true;
 	}
 	else if (hands.pSum == hands.dSum && hands.pTurnOver &&
 		hands.dTurnOver)
 	{
-		std::wcout << "\nIt's a draw!\n\n";
+		std::wcout << "\n\tIt's a draw!\n\n";
+
+		++score[score_t::WLD_DRAW];
+
 		return true;
 	}
 	else
@@ -565,7 +592,7 @@ bool checkPlayAgain()
 
 	while (bGetInput)
 	{
-		std::wcout << "Play again (Y/N)? ";
+		std::wcout << "\tPlay again (Y/N)? ";
 
 		wchar_t pResponse{};
 		std::wcin >> pResponse;
@@ -574,7 +601,7 @@ bool checkPlayAgain()
 			pResponse != L'n' && pResponse != L'N' ||
 			std::wcin.fail())
 		{
-			std::wcout << "\nThat was not valid input! Please, try again...\n";
+			std::wcout << "\n\tThat was not valid input! Please, try again...\n";
 			std::wcin.clear();
 			std::wcin.ignore(stream_size::max(), '\n');
 		}
