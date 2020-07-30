@@ -4,6 +4,7 @@
 */
 
 #include "Card.h"
+#include "Deck.h"
 #include <iostream>
 #include <vector>
 
@@ -61,32 +62,11 @@
 
 int main()
 {
-	using s = Card::Suit;
-	using r = Card::Rank;
+	Deck d{};
 
-	std::vector<Card> card{
-		{s::CLUBS, r::ACE},
-		{s::CLUBS, r::TWO},
-		{s::CLUBS, r::THREE},
-		{s::CLUBS, r::FOUR},
-		{s::CLUBS, r::FIVE},
-		{s::CLUBS, r::SIX},
-		{s::CLUBS, r::SEVEN},
-		{s::CLUBS, r::EIGHT},
-		{s::CLUBS, r::NINE},
-		{s::CLUBS, r::TEN },
-		{s::CLUBS, r::JACK},
-		{s::CLUBS, r::QUEEN},
-		{s::CLUBS, r::KING}
-	};
-
-	for (const auto& c : card)
-	{
-		std::wcout << c.getCardValue() << ' ';
-		c.print();
-
-		std::wcout << '\n';
-	}
+	d.shuffle();
+	d.print();
+	d.dealCard().print();
 
 	return 0;
 }
