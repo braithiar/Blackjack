@@ -5,11 +5,18 @@
 #include <algorithm>
 #include <array>
 #include <ctime>
-#include <io.h>
 #include <iostream>
 #include <random>
-#include <stdio.h>
 
+/**********************************************
+* Class: Deck
+* Author: J. Thomas Paxton
+* Date: 07/29/2020
+*
+* Creates a deck of 52 Card class objects: one
+* card object for each of the 52 cards in a 
+* standard deck of cards. 
+***********************************************/
 class Deck
 {
 public:
@@ -21,10 +28,47 @@ private:
 	index_t m_cardIndex{ 0 };
 
 public:
+	/***************************************************************
+	* Deck::Deck()
+	*
+	* constructor
+	*
+	* Fills deck array with 52 Card class objects, one for each card
+	* in a standard deck of playing cards.
+	****************************************************************/
 	Deck();
 
+	/*************************************************
+	* Deck::print()
+	*
+	* param none
+	* return void
+	*
+	* Prints all 52 Cards in Deck array.
+	**************************************************/
 	void print() const;
+
+	/*************************************************
+	* Deck::shuffle()
+	*
+	* param none
+	* return void
+	*
+	* Randomizes array of cards and also resets inter-
+	* nal tracking of current index used in dealing
+	* cards.
+	**************************************************/
 	void shuffle();
+
+	/*************************************************
+	* Deck::dealCard()
+	*
+	* param none
+	* return const Card&
+	*
+	* Reminder: returns a constant reference of type 
+	* Card, which cannot be used as an l-value.
+	**************************************************/
 	const Card& dealCard();
 };
 

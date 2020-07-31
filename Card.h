@@ -54,10 +54,55 @@ private:
 	Rank m_rank{ Rank::ACE };
 
 public:
+	/**************************************************
+	* Card::Card()
+	*
+	* constructor
+	* param none
+	*
+	* Defaults card suit to clubs and rank to ace. Con-
+	* structor sets up windows console to use unicode 
+	* card symbols. Card class uses std::wcout.
+	***************************************************/
 	Card() = default;
+
+	/**************************************************
+	* Card::Card(Suit c_suit, Rank c_rank)
+	*
+	* constructor
+	* param Suit, Rank
+	*
+	* Paramameter types defined in class as public 
+	* enums. Con-
+	* structor sets up windows console to use unicode 
+	* card symbols. Card class uses std::wcout.
+	***************************************************/
 	Card(Suit c_suit, Rank c_rank);
+
+	/**************************************************
+	* Card::getCardValue()
+	*
+	* param none
+	* return card_value_t (int)
+	*
+	* Returns the value of the card to caller. Aces
+	* are always returned with a value of 1.
+	***************************************************/
 	card_value_t getCardValue() const;
+
+	/**************************************************
+	* Card::print()
+	*
+	* param none
+	* return void
+	*
+	* Prints card Suit & Rank to console in unicode.
+	* Suits are represented with unicode symbols.
+	***************************************************/
 	void print() const;
+
+	Suit getSuit() const { return m_suit; }
+	Rank getRank() const { return m_rank; }
 };
 
 #endif

@@ -1,115 +1,90 @@
 #include "Card.h"
 
-using rank = Card::Rank;
-using suit = Card::Suit;
-
 //Constructor sets up console output to use Unicode for card symbols.
-Card::Card(Suit c_suit, Rank c_rank) : Card::m_suit{ c_suit }, Card::m_rank{ c_rank }
+Card::Card(Suit c_suit, Rank c_rank) : m_suit{ c_suit }, m_rank{ c_rank }
 {
 	_setmode(_fileno(stdout), _O_U16TEXT);
 }
 
-/**************************************************
-* Card::getCardValue()
-* Author: J. Thomas Paxton
-* Date: 07/29/2020
-*
-* param none
-* return card_value_t (int)
-* 
-* Returns the value of the card to caller. Aces
-* are always returned with a value of 1.
-***************************************************/
 Card::card_value_t Card::getCardValue() const
 {
-	switch (Card::m_rank)
+	switch (m_rank)
 	{
-		case rank::TEN:
-		case rank::JACK:
-		case rank::QUEEN:
-		case rank::KING:
+		case Rank::TEN:
+		case Rank::JACK:
+		case Rank::QUEEN:
+		case Rank::KING:
 			return 10;
 		default:
-			return (static_cast<int>(Card::m_rank) + 1);
+			return (static_cast<int>(m_rank) + 1);
 	}
 }
 
-/**************************************************
-* Card::print()
-* Author: J. Thomas Paxton
-* Date: 07/29/2020
-*
-* param none
-* return void
-*
-* Prints card Suit & Rank to console in unicode.
-* Suits are represented with unicode symbols.
-***************************************************/
 void Card::print() const
 {
-	switch (Card::m_rank)
+	switch (m_rank)
 	{
-		case rank::ACE:
+		case Rank::ACE:
 			std::wcout << 'A';
 			break;
-		case rank::TWO:
+		case Rank::TWO:
 			std::wcout << '2';
 			break;
-		case rank::THREE:
+		case Rank::THREE:
 			std::wcout << '3';
 			break;
-		case rank::FOUR:
+		case Rank::FOUR:
 			std::wcout << '4';
 			break;
-		case rank::FIVE:
+		case Rank::FIVE:
 			std::wcout << '5';
 			break;
-		case rank::SIX:
+		case Rank::SIX:
 			std::wcout << '6';
 			break;
-		case rank::SEVEN:
+		case Rank::SEVEN:
 			std::wcout << '7';
 			break;
-		case rank::EIGHT:
+		case Rank::EIGHT:
 			std::wcout << '8';
 			break;
-		case rank::NINE:
+		case Rank::NINE:
 			std::wcout << '9';
 			break;
-		case rank::TEN:
+		case Rank::TEN:
 			std::wcout << "10";
 			break;
-		case rank::JACK:
+		case Rank::JACK:
 			std::wcout << 'J';
 			break;
-		case rank::QUEEN:
+		case Rank::QUEEN:
 			std::wcout << 'Q';
 			break;
-		case rank::KING:
+		case Rank::KING:
 			std::wcout << 'K';
 			break;
-		case rank::RANK_MAX:
+		case Rank::RANK_MAX:
 			std::wcout << "\nOops! Max reached; something is broken!\n";
 			break;
 		default:
 			std::wcout << "\nUh oh! Something went wrong!\n";
 	}
 
-	switch (Card::m_suit)
+	switch (m_suit)
 	{
-		case suit::CLUBS:
+		case Suit::CLUBS:
 			std::wcout << L"\u2663";
 			break;
-		case suit::HEARTS:
+		case Suit::HEARTS:
 			std::wcout << L"\u2665";
 			break;
-		case suit::DIAMONDS:
+		case Suit::DIAMONDS:
 			std::wcout << L"\u2666";
 			break;
-		case suit::SPADES:
+		case Suit::SPADES:
 			std::wcout << L"\u2660";
 			break;
-		case suit::SUIT_MAX:
+		case Suit::SUIT_MAX:
 			std::wcout << "\nOops! Max reached; something is broken!\n";
 			break;
 		default:

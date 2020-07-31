@@ -36,7 +36,7 @@ void Deck::shuffle()
 	m_cardIndex = 0;
 }
 
-const Card& Deck::dealCard() 
+const Card& Deck::dealCard()
 {
 	if (m_cardIndex >= m_deck.size())
 		shuffle();
